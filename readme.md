@@ -1,3 +1,5 @@
+# TileTile
+
 **TileTile** is a seamless tile texture generator that uses the Flux Schnell image generation model provided by Pollinations.
 
 The app is currently free to use without restriction, allowing users to generate textures for graphic design and game development.
@@ -11,3 +13,6 @@ The app is currently free to use without restriction, allowing users to generate
 - 7 blend algorithms to seamlessly transition between tiles, with suggested values highlighted for each
 - Infinite tile preview map including a blend view toggle, smooth zoom/scaling and gridlines
 - Clean but feature packed and screen size responsive interface
+
+### Website
+https://tiletile.netlify.app/
