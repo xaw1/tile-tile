@@ -11,6 +11,36 @@ export function makeSeamless(
   const w = canvas.width;
   const h = canvas.height;
 
+  // Mirror mode — reflect quadrants instead of blending.
+  // blendWidth is repurposed as a crop offset (0–0.5) to shift which region
+  // of the source each reflected quadrant is drawn from.
+  if (mode === "mirror") {
+    const hw = Math.floor(w / 2);
+    const hh = Math.floor(h / 2);
+    const ox = Math.floor(w * blendWidth) % w;
+    const oy = Math.floor(h * blendWidth) % h;
+
+    // Build a hw×hh crop of the source at offset (ox, oy) with wrapping
+    const crop = document.createElement("canvas");
+    crop.width = hw;
+    crop.height = hh;
+    const cc = crop.getContext("2d")!;
+    cc.drawImage(sourceImg, -ox, -oy, w, h);
+    if (ox > 0) cc.drawImage(sourceImg, w - ox, -oy, w, h);
+    if (oy > 0) cc.drawImage(sourceImg, -ox, h - oy, w, h);
+    if (ox > 0 && oy > 0) cc.drawImage(sourceImg, w - ox, h - oy, w, h);
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(crop, 0, 0);                           // top-left: original
+    ctx.save(); ctx.translate(w, 0); ctx.scale(-1, 1);
+    ctx.drawImage(crop, 0, 0); ctx.restore();             // top-right: flip H
+    ctx.save(); ctx.translate(0, h); ctx.scale(1, -1);
+    ctx.drawImage(crop, 0, 0); ctx.restore();             // bottom-left: flip V
+    ctx.save(); ctx.translate(w, h); ctx.scale(-1, -1);
+    ctx.drawImage(crop, 0, 0); ctx.restore();             // bottom-right: flip HV
+    return;
+  }
+
   // 1. Draw original image
   ctx.drawImage(sourceImg, 0, 0, w, h);
   const original = ctx.getImageData(0, 0, w, h);
@@ -22,7 +52,7 @@ export function makeSeamless(
   const offCtx = offCanvas.getContext("2d", { willReadFrequently: true })!;
   const hw = Math.floor(w / 2);
   const hh = Math.floor(h / 2);
-  
+
   // Swap the four quadrants
   offCtx.drawImage(sourceImg, hw, hh, w - hw, h - hh, 0, 0, w - hw, h - hh);       // bottom-right → top-left
   offCtx.drawImage(sourceImg, 0, hh, hw, h - hh, w - hw, 0, hw, h - hh);            // bottom-left → top-right
@@ -44,11 +74,20 @@ export function makeSeamless(
       let alpha: number; // 0 = use offset, 1 = use original
 
       if (mode === "crossfade") {
+        // L∞ distance — square blend zone, linear falloff
         alpha = 1 - Math.max(0, Math.min(1, Math.max(dx, dy)));
       } else if (mode === "diamond") {
+        // L1 distance — diamond blend zone, linear falloff
         alpha = Math.max(0, 1 - (dx + dy));
+      } else if (mode === "circular") {
+        // L2 distance — circular blend zone, hard linear falloff (distinct from cosine)
+        alpha = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy));
+      } else if (mode === "gaussian") {
+        // Radial exponential falloff — tight central bloom, heavy edge blending
+        const r2 = dx * dx + dy * dy;
+        alpha = Math.exp(-3 * r2);
       } else {
-        // cosine (default) — smoothest results
+        // cosine (default) — separable cosine smooth falloff, softest result
         const fx = Math.max(0, Math.min(1, dx));
         const fy = Math.max(0, Math.min(1, dy));
         const cx = (1 - Math.cos(fx * Math.PI)) / 2;
@@ -57,7 +96,7 @@ export function makeSeamless(
       }
 
       alpha = Math.max(0, Math.min(1, alpha));
-      
+
       const out_x = (x + hw) % w;
       const out_y = (y + hh) % h;
       const out_i = (out_y * w + out_x) * 4;

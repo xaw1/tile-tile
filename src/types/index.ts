@@ -1,4 +1,4 @@
-export type BlendMode = "cosine" | "crossfade" | "diamond";
+export type BlendMode = "cosine" | "crossfade" | "diamond" | "circular" | "gaussian" | "mirror";
 
 export interface PromptStyle {
   id: string;
