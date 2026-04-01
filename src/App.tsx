@@ -194,7 +194,7 @@ export default function App() {
         <div className="max-w-3xl mx-auto px-4 w-full">
           <HowItWorks />
           
-          <footer className="mt-20 pt-8 border-t border-[var(--color-border)] text-sm text-[var(--color-text-dim)] flex flex-col md:flex-row items-start justify-between gap-4 pb-20">
+          <footer className="mt-20 pt-8 border-t border-[var(--color-border)] text-sm text-[var(--color-text-dim)] flex flex-col md:flex-row items-start md:items-baseline justify-between gap-4 pb-20">
             <div className="flex flex-col gap-2">
               <div>Free & open — no API key required</div>
               <a 
