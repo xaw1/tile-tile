@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --font-h: "Space Grotesk", sans-serif;
+  --font-sans: "JetBrains Mono", monospace;
+  --color-accent: #c5f026;
+  --color-accent-dim: #8aaa10;
+  --color-accent-bg: rgba(197, 240, 38, 0.08);
+  --color-surface: #131315;
+  --color-surface-2: #1a1a1e;
+  --color-border: #2a2a30;
+  --color-border-hi: #3a3a44;
+  --color-text: #c8c8c8;
+  --color-text-dim: #666670;
+  --color-text-bright: #eeeef0;
+  --color-danger: #f04040;
+}
+
+:root {
+  background-color: #0a0a0b;
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-font {
+  font-family: var(--font-h);
+}
+
+/* Base custom interactive states */
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Input styles */
+input[type="text"] {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-bright);
+}
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--color-border-hi);
+}
+
+/* Custom range inputs */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+/* Custom Utilities for CSS Background Animation */
+@keyframes bg-scroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 50px 50px; }
+}
+
+.bg-grid-anim {
+  background-image: linear-gradient(to right, #1a1a1e 1px, transparent 1px),
+                    linear-gradient(to bottom, #1a1a1e 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: bg-scroll 2s linear infinite;
+}

@@ -1,0 +1,79 @@
+﻿[36mvite v8.0.3 [32mbuilding client environment for production...[36m[39m
+[2K
+transforming...Ô£ô 1725 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.88 kB Ôöé gzip: 0.48 kB
+dist/assets/index-DgO2NIha.css  22.83 kB Ôöé gzip: 5.10 kB
+dist/assets/index-CRa6oJXc.js   25.21 kB Ôöé gzip: 8.41 kB
+
+node.exe : [31mÔ£ù[39m Build failed in 1.22s
+At line:1 char:1
++ & "C:\Users\yjimk\AppData\Local\fnm_multishells\
+39876_1774999190170/n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31 
+   mÔ£ù[39m Build failed in 1.22s:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31merror during build:
+[31mBuild failed with 1 error:
+
+Error: [vite]: Rolldown failed to resolve import 
+"react-dom/client" from 
+"D:/Code/Claude/pollinations/src/main.tsx".
+This is most likely unintended because it can 
+break your application at runtime.
+If you do want to externalize this module 
+explicitly add it to
+`build.rollupOptions.external`
+    at viteLog (file:///D:/Code/Claude/pollination
+s/node_modules/vite/dist/node/chunks/node.js:32942
+:57)
+    at file:///D:/Code/Claude/pollinations/node_mo
+dules/vite/dist/node/chunks/node.js:32978:71
+    at onwarn (file:///D:/Code/Claude/pollinations
+/node_modules/@vitejs/plugin-react/dist/index.js:4
+0:7)
+    at file:///D:/Code/Claude/pollinations/node_mo
+dules/vite/dist/node/chunks/node.js:32978:28
+    at onRollupLog (file:///D:/Code/Claude/pollina
+tions/node_modules/vite/dist/node/chunks/node.js:3
+2973:63)
+    at onLog (file:///D:/Code/Claude/pollinations/
+node_modules/vite/dist/node/chunks/node.js:32743:4
+)
+    at file:///D:/Code/Claude/pollinations/node_mo
+dules/rolldown/dist/shared/rolldown-build-CPrIX9V6
+.mjs:49:26
+    at logger (file:///D:/Code/Claude/pollinations
+/node_modules/rolldown/dist/shared/rolldown-build-
+CPrIX9V6.mjs:40:3)
+    at onLog (file:///D:/Code/Claude/pollinations/
+node_modules/rolldown/dist/shared/bindingify-input
+-options-e7ze4hPR.mjs:1972:32)[31m
+    at aggregateBindingErrorsIntoJsError (file:///
+D:/Code/Claude/pollinations/node_modules/rolldown/
+dist/shared/error-BLhcSyeg.mjs:48:18)
+    at unwrapBindingResult (file:///D:/Code/Claude
+/pollinations/node_modules/rolldown/dist/shared/er
+ror-BLhcSyeg.mjs:18:128)
+    at #build (file:///D:/Code/Claude/pollinations
+/node_modules/rolldown/dist/shared/rolldown-build-
+CPrIX9V6.mjs:3313:34)
+    at async buildEnvironment (file:///D:/Code/Cla
+ude/pollinations/node_modules/vite/dist/node/chunk
+s/node.js:32849:64)
+    at async Object.build (file:///D:/Code/Claude/
+pollinations/node_modules/vite/dist/node/chunks/no
+de.js:33271:19)
+    at async Object.buildApp (file:///D:/Code/Clau
+de/pollinations/node_modules/vite/dist/node/chunks
+/node.js:33268:153)
+    at async CAC.<anonymous> (file:///D:/Code/Clau
+de/pollinations/node_modules/vite/dist/node/cli.js
+:778:3) {
+  errors: [Getter/Setter]
+}[39m
