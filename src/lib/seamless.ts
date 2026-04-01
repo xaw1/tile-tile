@@ -11,6 +11,55 @@ export function makeSeamless(
   const w = canvas.width;
   const h = canvas.height;
 
+  // Kaleidoscope mode — 8-fold symmetric: mirror 4 quadrants + diagonal reflection within each.
+  // blendWidth shifts the crop origin so the slider rotates/offsets the pattern.
+  if (mode === "kaleidoscope") {
+    const hw = Math.floor(w / 2);
+    const hh = Math.floor(h / 2);
+    const ox = Math.floor(w * blendWidth) % w;
+    const oy = Math.floor(h * blendWidth) % h;
+
+    // Build the hw×hh quadrant crop with wrapping offset
+    const crop = document.createElement("canvas");
+    crop.width = hw;
+    crop.height = hh;
+    const cc = crop.getContext("2d")!;
+    cc.drawImage(sourceImg, -ox, -oy, w, h);
+    if (ox > 0) cc.drawImage(sourceImg, w - ox, -oy, w, h);
+    if (oy > 0) cc.drawImage(sourceImg, -ox, h - oy, w, h);
+    if (ox > 0 && oy > 0) cc.drawImage(sourceImg, w - ox, h - oy, w, h);
+
+    // Build 8-fold quadrant: lower-left triangle from crop, upper-right triangle
+    // from its diagonal reflection (swap x↔y).
+    const quad = document.createElement("canvas");
+    quad.width = hw;
+    quad.height = hh;
+    const qc = quad.getContext("2d")!;
+
+    // Lower-left triangle: draw crop as-is
+    qc.drawImage(crop, 0, 0);
+
+    // Upper-right triangle (y < x): overwrite with diagonal reflection
+    qc.save();
+    qc.beginPath();
+    qc.moveTo(0, 0);
+    qc.lineTo(hw, 0);
+    qc.lineTo(hw, hh);
+    qc.closePath();
+    qc.clip();
+    qc.transform(0, 1, 1, 0, 0, 0); // swap x↔y: canvas(px,py) = crop(py,px)
+    qc.drawImage(crop, 0, 0);
+    qc.restore();
+
+    // Mirror the 8-fold quadrant into all 4 positions
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(quad, 0, 0);
+    ctx.save(); ctx.translate(w, 0);  ctx.scale(-1,  1); ctx.drawImage(quad, 0, 0); ctx.restore();
+    ctx.save(); ctx.translate(0, h);  ctx.scale( 1, -1); ctx.drawImage(quad, 0, 0); ctx.restore();
+    ctx.save(); ctx.translate(w, h);  ctx.scale(-1, -1); ctx.drawImage(quad, 0, 0); ctx.restore();
+    return;
+  }
+
   // Mirror mode — reflect quadrants instead of blending.
   // blendWidth is repurposed as a crop offset (0–0.5) to shift which region
   // of the source each reflected quadrant is drawn from.

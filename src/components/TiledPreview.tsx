@@ -22,6 +22,14 @@ interface MenuState {
 
 const GRID_COLOR_PRESETS = ['#c5f026', '#ffffff', '#ff4444', '#22d3ee', '#f97316'];
 
+const SWEET_SPOTS: Partial<Record<string, { min: number; max: number }>> = {
+  cosine:    { min: 0.25, max: 0.40 },
+  gaussian:  { min: 0.20, max: 0.35 },
+  circular:  { min: 0.30, max: 0.45 },
+  crossfade: { min: 0.30, max: 0.50 },
+  diamond:   { min: 0.30, max: 0.50 },
+};
+
 function hexToRgba(hex: string, opacity: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -40,8 +48,25 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
   const [gridStyle, setGridStyle] = useState<GridStyle>({ color: '#c5f026', width: 2, opacity: 0.6 });
   const [menu, setMenu] = useState<MenuState>({ open: false, x: 0, y: 0 });
   const [containerWidth, setContainerWidth] = useState(0);
+  const [showSweetSpot, setShowSweetSpot] = useState(false);
+  const [sliderMenu, setSliderMenu] = useState<MenuState>({ open: false, x: 0, y: 0 });
+  const [sliderInputValue, setSliderInputValue] = useState('');
+  const sliderMenuRef = useRef<HTMLDivElement>(null);
 
   const bgPos = () => `calc(50% + ${panRef.current.x}px) calc(50% + ${panRef.current.y}px)`;
+
+  // Close slider context menu on outside click or Escape
+  useEffect(() => {
+    if (!sliderMenu.open) return;
+    const onDown = (e: MouseEvent) => {
+      if (sliderMenuRef.current && !sliderMenuRef.current.contains(e.target as Node))
+        setSliderMenu(m => ({ ...m, open: false }));
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSliderMenu(m => ({ ...m, open: false })); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [sliderMenu.open]);
 
   // Close context menu on outside click or Escape
   useEffect(() => {
@@ -191,7 +216,14 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
             <Sliders size={14} className="hidden md:block text-[var(--color-text-dim)]" />
             <select
               value={settings.blendMode}
-              onChange={(e) => setSettings({ ...settings, blendMode: e.target.value as BlendMode })}
+              onChange={(e) => {
+                const newMode = e.target.value as BlendMode;
+                const newIsOffset = newMode === 'mirror' || newMode === 'kaleidoscope';
+                const clampedWidth = newIsOffset
+                  ? settings.blendWidth
+                  : Math.max(0.1, Math.min(0.5, settings.blendWidth));
+                setSettings({ ...settings, blendMode: newMode, blendWidth: clampedWidth });
+              }}
               className="bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-bright)] text-xs rounded-md px-2 py-1 outline-none focus:border-[var(--color-accent)] uppercase font-bold tracking-wider"
             >
               <option value="cosine">● Cosine</option>
@@ -200,23 +232,51 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
               <option value="circular">◉ Circular</option>
               <option value="gaussian">✦ Gaussian</option>
               <option value="mirror">⬡ Mirror</option>
+              <option value="kaleidoscope">✦ Kaleidoscope</option>
             </select>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-dim)] hidden md:block w-8 text-right shrink-0">
-                {settings.blendMode === 'mirror' ? 'Off' : 'Width'}
+                {settings.blendMode === 'mirror' || settings.blendMode === 'kaleidoscope' ? 'Offset' : 'Width'}
               </span>
-              <input
-                type="range"
-                min="0.1"
-                max="0.5"
-                step="0.01"
-                value={settings.blendWidth}
-                onChange={(e) => setSettings({ ...settings, blendWidth: parseFloat(e.target.value) })}
-                className="w-16 md:w-20"
-                title={settings.blendMode === 'mirror'
-                  ? `Mirror Offset: ${(settings.blendWidth * 100).toFixed(0)}%`
-                  : `Blend Width: ${(settings.blendWidth * 100).toFixed(0)}%`}
-              />
+              {(() => {
+                const isOffset = settings.blendMode === 'mirror' || settings.blendMode === 'kaleidoscope';
+                const sliderMin = isOffset ? 0 : 0.1;
+                const sliderMax = isOffset ? 1.0 : 0.5;
+                const sweetSpot = !isOffset ? SWEET_SPOTS[settings.blendMode] : undefined;
+                const toSliderPct = (v: number) => (v - sliderMin) / (sliderMax - sliderMin) * 100;
+                const sweetStart = sweetSpot ? toSliderPct(sweetSpot.min) : 0;
+                const sweetEnd   = sweetSpot ? toSliderPct(sweetSpot.max) : 0;
+                return (
+                  <div className="relative w-16 md:w-20 flex items-center">
+                    {showSweetSpot && sweetSpot && (
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 h-[5px] rounded pointer-events-none z-0"
+                        style={{
+                          left:  `calc(7px + (100% - 14px) * ${sweetStart / 100})`,
+                          width: `calc((100% - 14px) * ${(sweetEnd - sweetStart) / 100})`,
+                          background: 'rgba(197,240,38,0.7)',
+                          boxShadow: '0 0 6px 2px rgba(197,240,38,0.5)',
+                        }}
+                      />
+                    )}
+                    <input
+                      type="range"
+                      min={sliderMin}
+                      max={sliderMax}
+                      step="0.01"
+                      value={settings.blendWidth}
+                      onChange={(e) => setSettings({ ...settings, blendWidth: parseFloat(e.target.value) })}
+                      className="w-full relative z-10"
+                      title={`${isOffset ? 'Offset' : 'Blend Width'}: ${(settings.blendWidth * 100).toFixed(0)}% — right-click for options`}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        setSliderInputValue((settings.blendWidth * 100).toFixed(0));
+                        setSliderMenu({ open: true, x: e.clientX, y: e.clientY });
+                      }}
+                    />
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -288,6 +348,75 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
           }}
         />
       </div>
+
+      {/* Blend width / offset slider context menu */}
+      {sliderMenu.open && (() => {
+        const isOffset = settings.blendMode === 'mirror' || settings.blendMode === 'kaleidoscope';
+        const sliderMin = isOffset ? 0 : 0.1;
+        const sliderMax = isOffset ? 1.0 : 0.5;
+        const hasSweetSpot = !isOffset && !!SWEET_SPOTS[settings.blendMode];
+        const menuW2 = 180;
+        const menuX2 = sliderMenu.x + menuW2 > window.innerWidth ? sliderMenu.x - menuW2 : sliderMenu.x;
+        const applyInput = () => {
+          const pct = parseFloat(sliderInputValue);
+          if (!isNaN(pct)) {
+            const v = Math.max(sliderMin, Math.min(sliderMax, pct / 100));
+            setSettings({ ...settings, blendWidth: v });
+          }
+          setSliderMenu(m => ({ ...m, open: false }));
+        };
+        return (
+          <div
+            ref={sliderMenuRef}
+            className="fixed z-50 bg-[var(--color-surface)] border border-[var(--color-border-hi)] rounded-lg shadow-2xl p-3 flex flex-col gap-3"
+            style={{ top: sliderMenu.y, left: menuX2, width: menuW2 }}
+          >
+            <div className="text-[10px] uppercase tracking-widest font-bold text-[var(--color-text-dim)]">
+              {isOffset ? 'Offset' : 'Blend Width'}
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-dim)]">
+                Exact value ({(sliderMin * 100).toFixed(0)}–{(sliderMax * 100).toFixed(0)}%)
+              </span>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  min={sliderMin * 100}
+                  max={sliderMax * 100}
+                  step="1"
+                  value={sliderInputValue}
+                  onChange={(e) => setSliderInputValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') applyInput(); }}
+                  autoFocus
+                  className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text-bright)] text-xs rounded px-2 py-1 outline-none focus:border-[var(--color-accent)] font-mono"
+                />
+                <button
+                  onClick={applyInput}
+                  className="shrink-0 px-2 py-1 text-[10px] uppercase tracking-widest font-bold bg-[var(--color-accent)] text-black rounded hover:opacity-90"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+            {hasSweetSpot && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showSweetSpot}
+                  onChange={(e) => setShowSweetSpot(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded-sm border-[var(--color-border)] bg-[#050505] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                />
+                <span className="text-[10px] uppercase tracking-widest text-[var(--color-text-dim)]">Show sweet spot</span>
+              </label>
+            )}
+            {hasSweetSpot && showSweetSpot && SWEET_SPOTS[settings.blendMode] && (
+              <div className="text-[10px] text-[var(--color-text-dim)] font-mono">
+                Optimal: {(SWEET_SPOTS[settings.blendMode]!.min * 100).toFixed(0)}%–{(SWEET_SPOTS[settings.blendMode]!.max * 100).toFixed(0)}%
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Gridline style context menu */}
       {menu.open && (
