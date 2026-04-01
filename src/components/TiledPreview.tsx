@@ -25,7 +25,7 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
     panRef.current.x += e.movementX;
     panRef.current.y += e.movementY;
     if (previewRef.current) {
-      previewRef.current.style.backgroundPosition = `${panRef.current.x}px ${panRef.current.y}px`;
+      previewRef.current.style.backgroundPosition = `calc(50% + ${panRef.current.x}px) calc(50% + ${panRef.current.y}px)`;
     }
   };
   
@@ -60,7 +60,18 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
       newCount = Math.max(1, Math.min(5, Number(newCount.toFixed(2))));
       
       if (newCount !== current) {
-        setSettings({ ...settingsRef.current, tileCount: newCount });
+        // Adjust pan coordinates so the center of the screen stays stationary
+        const scaleChange = current / newCount;
+        panRef.current.x *= scaleChange;
+        panRef.current.y *= scaleChange;
+        
+        if (el) {
+          el.style.backgroundPosition = `calc(50% + ${panRef.current.x}px) calc(50% + ${panRef.current.y}px)`;
+          el.style.backgroundSize = `${100 / newCount}%`;
+        }
+        
+        settingsRef.current = { ...settingsRef.current, tileCount: newCount };
+        setSettings(settingsRef.current);
       }
     };
 
@@ -128,7 +139,22 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
               max="5" 
               step="0.2"
               value={settings.tileCount}
-              onChange={(e) => setSettings({ ...settings, tileCount: parseFloat(e.target.value) })}
+              onChange={(e) => {
+                const newCount = parseFloat(e.target.value);
+                const current = settings.tileCount;
+                if (newCount !== current) {
+                  const scaleChange = current / newCount;
+                  panRef.current.x *= scaleChange;
+                  panRef.current.y *= scaleChange;
+                  if (previewRef.current) {
+                    previewRef.current.style.backgroundPosition = `calc(50% + ${panRef.current.x}px) calc(50% + ${panRef.current.y}px)`;
+                    previewRef.current.style.backgroundSize = `${100 / newCount}%`;
+                  }
+                  
+                  settingsRef.current = { ...settings, tileCount: newCount };
+                  setSettings(settingsRef.current);
+                }
+              }}
               className="w-full sm:w-24"
             />
           </div>
@@ -146,7 +172,7 @@ export function TiledPreview({ seamlessUrl, settings, setSettings }: Props) {
         style={{
           backgroundImage: `url(${seamlessUrl})`,
           backgroundRepeat: 'repeat',
-          backgroundPosition: `${panRef.current.x}px ${panRef.current.y}px`,
+          backgroundPosition: `calc(50% + ${panRef.current.x}px) calc(50% + ${panRef.current.y}px)`,
           backgroundSize: `${100 / settings.tileCount}%`,
           imageRendering: 'pixelated'
         }}

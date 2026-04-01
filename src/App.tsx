@@ -36,6 +36,7 @@ export default function App() {
     blendMode: 'cosine',
     blendWidth: 0.35,
     tileCount: 3,
+    showGridlines: false,
   });
 
   const handleSelectPreset = (p: string) => {
@@ -74,11 +75,7 @@ export default function App() {
         enhance: settings.enhance
       });
       
-      setSourceUrl(url); // This passes to TextureOutput, which will load it & flag loading complete internally? 
-      // Actually, Pollinations image Generation takes time, so the <img> tag will be "loading" for 10-30 seconds.
-      // But we can just set loading false here because the image is still doing network fetch. 
-      // Better: we preload it before setting it, or let `<img src>` handle it if we have an onLoad.
-      // Wait: `TextureOutput` has an `Image` Object it creates to draw to Canvas. We can rely on its `onSeamlessGenerated` callback!
+      setSourceUrl(url);
       
     } catch (error) {
       console.error(error);

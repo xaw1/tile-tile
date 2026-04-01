@@ -7,4 +7,5 @@ export interface TextureSettings {
   blendMode: BlendMode;
   blendWidth: number;
   tileCount: number;
+  showGridlines: boolean;
 }

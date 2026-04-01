@@ -57,12 +57,17 @@ export function makeSeamless(
       }
 
       alpha = Math.max(0, Math.min(1, alpha));
+      
+      const out_x = (x + hw) % w;
+      const out_y = (y + hh) % h;
+      const out_i = (out_y * w + out_x) * 4;
+
       for (let c = 0; c < 3; c++) {
-        result.data[i + c] = Math.round(
+        result.data[out_i + c] = Math.round(
           original.data[i + c] * alpha + offset.data[i + c] * (1 - alpha)
         );
       }
-      result.data[i + 3] = 255;
+      result.data[out_i + 3] = 255;
     }
   }
 
