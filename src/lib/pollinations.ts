@@ -1,4 +1,3 @@
-export const POLLINATIONS_API_KEY = "pk_YflHHkAFtBhZEAAr";
 
 // Enhance a texture prompt using Mistral Small
 export async function enhancePrompt(rawPrompt: string): Promise<string> {
