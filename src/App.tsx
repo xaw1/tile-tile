@@ -23,7 +23,7 @@ export default function App() {
   const [activePreset, setActivePreset] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusText, setStatusText] = useState<string>('');
-  
+
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [seamlessUrl, setSeamlessUrl] = useState<string | null>(null);
   const [seed, setSeed] = useState<number | null>(null);
@@ -106,7 +106,7 @@ export default function App() {
       });
 
       setSourceUrl(url);
-      
+
     } catch (error) {
       console.error(error);
       setIsLoading(false);
@@ -121,12 +121,12 @@ export default function App() {
         <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-[var(--color-accent)] font-bold brand-font text-xl tracking-tight">
             <Hexagon className="fill-[var(--color-accent-bg)]" />
-            <span>TEXTURE<span className="text-[var(--color-text-bright)]">SMITH</span></span>
+            <span>TiLE<span className="text-[var(--color-text-bright)]">TiLE</span></span>
           </div>
           <a
             href="https://pollinations.ai/"
             target="_blank"
-            rel="noopener noreferrer" 
+            rel="noopener noreferrer"
             className="text-xs uppercase font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] px-2 py-1 rounded hover:text-[var(--color-text-bright)] hover:border-[var(--color-border-hi)] transition-colors"
           >
             Powered by Pollinations.ai
@@ -136,7 +136,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="w-full mt-12 overflow-x-hidden">
-        
+
         {/* Top Controls Container */}
         <div className="max-w-3xl mx-auto px-4 w-full">
           <PresetGrid
@@ -155,8 +155,8 @@ export default function App() {
             isEnhancing={isEnhancing}
             onSavePreset={saveCustomPreset}
           />
-          
-          <ActionBar 
+
+          <ActionBar
             prompt={prompt}
             onGenerate={handleGenerate}
             onEnhance={handleEnhance}
@@ -194,7 +194,7 @@ export default function App() {
               <div className="flex flex-col lg:flex-row items-stretch gap-6 w-full h-auto lg:h-[500px] xl:h-[650px]">
                 {/* Left Side: Single Texture Output */}
                 <div className="w-full lg:w-[35%] xl:w-[30%] flex flex-col shrink-0 min-h-[400px]">
-                  <TextureOutput 
+                  <TextureOutput
                     sourceUrl={sourceUrl}
                     enableBlend={settings.enableBlend}
                     blendMode={settings.blendMode}
@@ -207,14 +207,14 @@ export default function App() {
                     }}
                   />
                 </div>
-                
+
                 {/* Right Side: Tiled Preview */}
                 <div className="w-full lg:w-[65%] xl:w-[70%] flex flex-col shrink-0 min-h-[400px]">
                   {!isLoading ? (
-                    <TiledPreview 
-                      seamlessUrl={seamlessUrl} 
-                      settings={settings} 
-                      setSettings={setSettings} 
+                    <TiledPreview
+                      seamlessUrl={seamlessUrl}
+                      settings={settings}
+                      setSettings={setSettings}
                     />
                   ) : (
                     <div className="flex-1 w-full h-full min-h-[300px] border border-[var(--color-border)] border-dashed rounded-xl flex items-center justify-center text-[var(--color-text-dim)] bg-[#050505]/50">
@@ -233,17 +233,17 @@ export default function App() {
             </div>
           )}
         </div>
-        
+
         {/* Footer Container */}
         <div className="max-w-3xl mx-auto px-4 w-full">
           <HowItWorks />
-          
+
           <footer className="mt-20 pt-8 border-t border-[var(--color-border)] text-sm text-[var(--color-text-dim)] flex flex-col md:flex-row items-start md:items-baseline justify-between gap-4 pb-20">
             <div className="flex flex-col gap-2">
               <div>Free & open — no API key required</div>
-              <a 
-                href="https://github.com/xaw1" 
-                target="_blank" 
+              <a
+                href="https://github.com/xaw1"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 opacity-50 hover:opacity-100 hover:text-[var(--color-text-bright)] transition-all w-max"
                 title="xaw1 on GitHub"
