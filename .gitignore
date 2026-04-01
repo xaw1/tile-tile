@@ -31,3 +31,5 @@ pnpm-debug.log*
 
 # TypeScript cache
 *.tsbuildinfo
+
+CLAUDE.md
