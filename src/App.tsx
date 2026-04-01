@@ -7,8 +7,9 @@ import { TiledPreview } from './components/TiledPreview';
 import { HowItWorks } from './components/HowItWorks';
 import { EmptyState } from './components/EmptyState';
 import { enhancePrompt, buildImageUrl } from './lib/pollinations';
+import { PRESETS, PROMPT_STYLES } from './lib/presets';
 import { TextureSettings } from './types';
-import { Hexagon } from 'lucide-react';
+import { Hexagon, Lock } from 'lucide-react';
 
 const GithubIcon = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,8 +27,20 @@ export default function App() {
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [seamlessUrl, setSeamlessUrl] = useState<string | null>(null);
   const [seed, setSeed] = useState<number | null>(null);
+  const [seedLocked, setSeedLocked] = useState<boolean>(false);
 
   const [isEnhancing, setIsEnhancing] = useState<boolean>(false);
+
+  const [promptStyleId, setPromptStyleId] = useState<string>('standard');
+
+  const [customPresets, setCustomPresets] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('ts_custom_presets');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [settings, setSettings] = useState<TextureSettings>({
     size: 256,
@@ -40,9 +53,23 @@ export default function App() {
   });
 
   const handleSelectPreset = (p: string) => {
-    setActivePreset(p);
-    setPrompt(`${p}, seamless tileable texture, flat surface, uniform lighting, top down, material`);
+    setActivePreset(PRESETS.includes(p) ? p : '');
+    setPrompt(p);
   }
+
+  const saveCustomPreset = () => {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+    const updated = [trimmed, ...customPresets.filter(p => p !== trimmed)];
+    setCustomPresets(updated);
+    localStorage.setItem('ts_custom_presets', JSON.stringify(updated));
+  };
+
+  const deleteCustomPreset = (preset: string) => {
+    const updated = customPresets.filter(p => p !== preset);
+    setCustomPresets(updated);
+    localStorage.setItem('ts_custom_presets', JSON.stringify(updated));
+  };
 
   const handleEnhance = async () => {
     if (!prompt.trim()) return;
@@ -58,23 +85,26 @@ export default function App() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
-    
+
     setIsLoading(true);
     setSourceUrl(null);
     setSeamlessUrl(null);
-    
+
     try {
-      const newSeed = Math.floor(Math.random() * 999999);
+      const newSeed = seedLocked && seed !== null ? seed : Math.floor(Math.random() * 999999);
       setSeed(newSeed);
       setStatusText('Forging texture (10-30s)...');
-      
-      const url = buildImageUrl(prompt, { 
-        width: settings.size, 
-        height: settings.size, 
+
+      const style = PROMPT_STYLES.find(s => s.id === promptStyleId) ?? PROMPT_STYLES[0];
+      const fullPrompt = `${prompt.trim()}, ${style.suffix}`;
+
+      const url = buildImageUrl(fullPrompt, {
+        width: settings.size,
+        height: settings.size,
         seed: newSeed,
         enhance: settings.enhance
       });
-      
+
       setSourceUrl(url);
       
     } catch (error) {
@@ -109,13 +139,21 @@ export default function App() {
         
         {/* Top Controls Container */}
         <div className="max-w-3xl mx-auto px-4 w-full">
-          <PresetGrid activePreset={activePreset} onSelect={handleSelectPreset} />
-          
-          <PromptInput 
-            prompt={prompt} 
-            setPrompt={setPrompt} 
-            isLoading={isLoading} 
+          <PresetGrid
+            activePreset={activePreset}
+            onSelect={handleSelectPreset}
+            promptStyleId={promptStyleId}
+            setPromptStyleId={setPromptStyleId}
+            customPresets={customPresets}
+            onDeleteCustomPreset={deleteCustomPreset}
+          />
+
+          <PromptInput
+            prompt={prompt}
+            setPrompt={setPrompt}
+            isLoading={isLoading}
             isEnhancing={isEnhancing}
+            onSavePreset={saveCustomPreset}
           />
           
           <ActionBar 
@@ -137,10 +175,19 @@ export default function App() {
                 <span className="text-xs text-[var(--color-text-dim)] font-mono uppercase tracking-widest">
                   {isLoading && statusText ? 'Generating...' : 'Texture Output'}
                 </span>
-                {seed && !isLoading && (
-                  <span className="text-xs text-[var(--color-text-dim)] font-mono bg-[var(--color-surface-2)] px-2 py-1 rounded border border-[var(--color-border)]">
-                    Seed: {seed}
-                  </span>
+                {seed !== null && !isLoading && (
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={seedLocked}
+                      onChange={(e) => setSeedLocked(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <span className={`flex items-center gap-1.5 text-xs font-mono px-2 py-1 rounded border transition-colors ${seedLocked ? 'border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] text-[var(--color-text-dim)] bg-[var(--color-surface-2)] hover:border-[var(--color-border-hi)]'}`}>
+                      <Lock size={10} />
+                      Seed: {seed}
+                    </span>
+                  </label>
                 )}
               </div>
 
