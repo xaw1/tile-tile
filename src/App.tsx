@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PromptInput } from './components/PromptInput';
 import { PresetGrid } from './components/PresetGrid';
 import { ActionBar } from './components/FloatingActionBar';
@@ -6,7 +6,8 @@ import { TextureOutput } from './components/TextureOutput';
 import { TiledPreview } from './components/TiledPreview';
 import { HowItWorks } from './components/HowItWorks';
 import { EmptyState } from './components/EmptyState';
-import { enhancePrompt, buildImageUrl } from './lib/pollinations';
+import { enhancePrompt, buildImageUrl, POLLINATIONS_API_KEY } from './lib/pollinations';
+import { buildAuthUrl, parseRedirectKey, getStoredKey, setStoredKey, clearStoredKey } from './lib/auth';
 import { PRESETS, PROMPT_STYLES } from './lib/presets';
 import { TextureSettings } from './types';
 import { Hexagon, Lock } from 'lucide-react';
@@ -19,6 +20,20 @@ const GithubIcon = ({ size = 16 }: { size?: number }) => (
 );
 
 export default function App() {
+  const [userApiKey, setUserApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    const redirectKey = parseRedirectKey();
+    if (redirectKey) {
+      setStoredKey(redirectKey);
+      setUserApiKey(redirectKey);
+      window.history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+    const stored = getStoredKey();
+    if (stored) setUserApiKey(stored);
+  }, []);
+
   const [prompt, setPrompt] = useState<string>('');
   const [activePreset, setActivePreset] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -50,7 +65,14 @@ export default function App() {
     blendWidth: 0.35,
     tileCount: 3,
     showGridlines: false,
+    model: 'flux',
   });
+
+  const handleDisconnect = () => {
+    clearStoredKey();
+    setUserApiKey(null);
+    setSettings(s => ({ ...s, model: 'flux' }));
+  };
 
   const handleSelectPreset = (p: string) => {
     setActivePreset(PRESETS.includes(p) ? p : '');
@@ -75,7 +97,7 @@ export default function App() {
     if (!prompt.trim()) return;
     setIsEnhancing(true);
     try {
-      const enhanced = await enhancePrompt(prompt);
+      const enhanced = await enhancePrompt(prompt, userApiKey ?? undefined);
       setPrompt(enhanced);
     } catch (error) {
       console.error(error);
@@ -102,7 +124,8 @@ export default function App() {
         width: settings.size,
         height: settings.size,
         seed: newSeed,
-        enhance: settings.enhance
+        enhance: settings.enhance,
+        model: settings.model,
       });
 
       setSourceUrl(url);
@@ -123,14 +146,21 @@ export default function App() {
             <Hexagon className="fill-[var(--color-accent-bg)]" />
             <span>TiLE<span className="text-[var(--color-text-bright)]">TiLE</span></span>
           </div>
-          <a
-            href="https://pollinations.ai/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs uppercase font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] px-2 py-1 rounded hover:text-[var(--color-text-bright)] hover:border-[var(--color-border-hi)] transition-colors"
-          >
-            Powered by Pollinations.ai
-          </a>
+          {userApiKey ? (
+            <button
+              onClick={handleDisconnect}
+              className="text-xs uppercase font-mono text-[var(--color-accent)] border border-[var(--color-accent-dim)] px-2 py-1 rounded hover:text-[var(--color-text-bright)] hover:border-[var(--color-border-hi)] transition-colors"
+            >
+              Connected · Disconnect
+            </button>
+          ) : (
+            <a
+              href={buildAuthUrl()}
+              className="text-xs uppercase font-mono text-[var(--color-text-dim)] border border-[var(--color-border)] px-2 py-1 rounded hover:text-[var(--color-text-bright)] hover:border-[var(--color-border-hi)] transition-colors"
+            >
+              Connect Account
+            </a>
+          )}
         </div>
       </header>
 
@@ -164,6 +194,7 @@ export default function App() {
             isEnhancing={isEnhancing}
             settings={settings}
             setSettings={setSettings}
+            userApiKey={userApiKey}
           />
         </div>
 
@@ -205,6 +236,7 @@ export default function App() {
                       setSeamlessUrl(url);
                       setIsLoading(false);
                     }}
+                    apiKey={userApiKey ?? POLLINATIONS_API_KEY}
                   />
                 </div>
 

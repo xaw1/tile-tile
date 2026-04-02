@@ -14,4 +14,5 @@ export interface TextureSettings {
   blendWidth: number;
   tileCount: number;
   showGridlines: boolean;
+  model: string;
 }

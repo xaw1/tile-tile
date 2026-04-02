@@ -1,5 +1,6 @@
 import { Hammer, Sparkles, Maximize } from 'lucide-react';
 import { TextureSettings } from '../types';
+import { IMAGE_MODELS } from '../lib/pollinations';
 
 interface Props {
   prompt: string;
@@ -9,9 +10,11 @@ interface Props {
   isEnhancing: boolean;
   settings: TextureSettings;
   setSettings: (s: TextureSettings) => void;
+  userApiKey: string | null;
 }
 
-export function ActionBar({ prompt, onGenerate, onEnhance, isLoading, isEnhancing, settings, setSettings }: Props) {
+export function ActionBar({ prompt, onGenerate, onEnhance, isLoading, isEnhancing, settings, setSettings, userApiKey }: Props) {
+  const visibleModels = IMAGE_MODELS.filter(m => m.free || !!userApiKey);
   return (
     <div className="w-full bg-[var(--color-surface)] border-2 border-[var(--color-border)] p-4 md:p-5 rounded-xl flex flex-col lg:flex-row items-stretch lg:items-center gap-5 justify-between transition-all mb-8 mt-4">
       
@@ -93,8 +96,8 @@ export function ActionBar({ prompt, onGenerate, onEnhance, isLoading, isEnhancin
                 onClick={() => !isLoading && setSettings({ ...settings, size })}
                 disabled={isLoading}
                 className={`px-3 py-2 border-r border-[var(--color-border)] last:border-0 transition-colors ${
-                  settings.size === size 
-                    ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)]' 
+                  settings.size === size
+                    ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent)]'
                     : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-bright)]'
                 }`}
               >
@@ -102,6 +105,21 @@ export function ActionBar({ prompt, onGenerate, onEnhance, isLoading, isEnhancin
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Model Selector */}
+        <div className="flex items-center gap-2 shrink-0">
+          Model
+          <select
+            value={settings.model}
+            onChange={(e) => !isLoading && setSettings({ ...settings, model: e.target.value })}
+            disabled={isLoading}
+            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-[var(--color-text-dim)] hover:border-[var(--color-border-hi)] focus:outline-none focus:border-[var(--color-accent-dim)] transition-colors cursor-pointer disabled:cursor-not-allowed"
+          >
+            {visibleModels.map((m) => (
+              <option key={m.id} value={m.id}>{m.label}</option>
+            ))}
+          </select>
         </div>
       </div>
     </div>

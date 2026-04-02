@@ -2,8 +2,6 @@ import { useRef, useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 import { BlendMode } from '../types';
 import { makeSeamless } from '../lib/seamless';
-import { POLLINATIONS_API_KEY } from '../lib/pollinations';
-
 interface Props {
   sourceUrl: string | null;
   enableBlend: boolean;
@@ -12,9 +10,10 @@ interface Props {
   isLoading: boolean;
   statusText: string;
   onSeamlessGenerated: (url: string) => void;
+  apiKey: string;
 }
 
-export function TextureOutput({ sourceUrl, enableBlend, blendMode, blendWidth, isLoading, statusText, onSeamlessGenerated }: Props) {
+export function TextureOutput({ sourceUrl, enableBlend, blendMode, blendWidth, isLoading, statusText, onSeamlessGenerated, apiKey }: Props) {
   const [viewMode, setViewMode] = useState<'raw' | 'seamless'>('raw');
   const [seamlessDataUrl, setSeamlessDataUrl] = useState<string | null>(null);
   const [rawImageUrl, setRawImageUrl] = useState<string | null>(null);
@@ -33,7 +32,7 @@ export function TextureOutput({ sourceUrl, enableBlend, blendMode, blendWidth, i
       try {
         const res = await fetch(sourceUrl, {
           headers: {
-            "Authorization": `Bearer ${POLLINATIONS_API_KEY}`
+            "Authorization": `Bearer ${apiKey}`
           }
         });
         if (!res.ok) throw new Error("Failed to fetch image");
